@@ -76,6 +76,10 @@ SoLoud::handle bg_music2i;
 
 extern double player_speed_m;
 
+std::optional<double> credit_progress;
+
+
+
 void play_voices()
 {
 	std::this_thread::sleep_for(std::chrono::seconds(3));
@@ -99,6 +103,14 @@ void teleport_camera(glm::vec3 position, float yaw_, bool lock)
 	front.y = sin(glm::radians(pitch));
 	front.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
 	cameraFront = glm::normalize(front);
+}
+
+void start_credits()
+{
+	soloud.stopAll();
+	soloud.play(bg_music_credits);
+	credit_progress = 0.0;
+	teleport_camera(glm::vec3{ 400,301,-49 }, -90, true);
 }
 
 uint8_t advtext = 0;
@@ -228,6 +240,9 @@ int main()
 	assert(window);
 
 	glfwMakeContextCurrent(window);
+
+	glfwSwapInterval(0);
+
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
 	glfwSetScrollCallback(window, scroll_callback);
@@ -469,10 +484,22 @@ int main()
 	Texture text3("res/textures/text3.png");
 	Texture text4("res/textures/text4.png");
 
+	Texture credit1("res/textures/credit1.png");
+	Texture credit2("res/textures/credit2.png");
+	Texture credit3("res/textures/credit3.png");
+	Texture credit4("res/textures/post_credit.png");
+	Texture black("res/textures/black.png");
+
 	cubes.push_back(Cube{ glm::vec3{300,300,-50}, &text1 });
 	cubes.push_back(Cube{ glm::vec3{310,300,-50}, &text2 });
 	cubes.push_back(Cube{ glm::vec3{320,300,-50}, &text3 });
 	cubes.push_back(Cube{ glm::vec3{330,300,-50}, &text4 });
+	cubes.push_back(Cube{ glm::vec3{400,300,-50}, &credit1 });
+	cubes.push_back(Cube{ glm::vec3{400,299,-50}, &credit2 });
+	cubes.push_back(Cube{ glm::vec3{400,298,-50}, &credit3 });
+	cubes.push_back(Cube{ glm::vec3{400,297,-50}, &black });
+	cubes.push_back(Cube{ glm::vec3{400,301,-50}, &black });
+	cubes.push_back(Cube{ glm::vec3{500,300,-50}, &credit4 });
 
 	teleport_camera(glm::vec3{ 300,300,-49 }, -90, true);
 	
@@ -1037,7 +1064,7 @@ int main()
 		for (int z = 0; z < 9; ++z)
 		{
 			{
-				cubes.push_back(Cube{ glm::vec3{-1000 + 17,5 - y,-1000.0 + z}, &lab_tile });
+				//cubes.push_back(Cube{ glm::vec3{-1000 + 17,5 - y,-1000.0 + z}, &lab_tile });
 			}
 		}
 
@@ -1080,7 +1107,7 @@ int main()
 
 	bg_music2.load("res/sounds/starry_dream2.mp3");
 	bg_music2.setLooping(true);
-	bg_music2.setVolume(1.25);
+	bg_music2.setVolume(1.5);
 
 	bg_music_credits.load("res/sounds/starry_dream.mp3");
 	bg_music_credits.setVolume(1.25);
@@ -1125,13 +1152,48 @@ int main()
 		}
 	}
 
+
+	///
+	//start_credits();
+	/// 
 	while (!glfwWindowShouldClose(window))
 	{
-	
+		static uint32_t frames = 0;
+		static uint32_t clock = 0;
+		++frames;
+
+		static std::optional<Player> player_save;
 		// per-frame time logic
 		// --------------------
 		float currentFrame = glfwGetTime();
 		deltaTime = std::min<>(double(currentFrame - lastFrame), 1.0/30.0) * 1.125;
+		
+		if (uint32_t(currentFrame) > clock)
+		{
+			std::cout << "FPS: " << frames << std::endl;
+			frames = 0;
+			clock++;
+		}
+
+		if (credit_progress.has_value())
+		{
+			player_save.reset();
+			static bool onlyonce = true;
+			if (credit_progress > 4.0)
+			{
+				if (onlyonce)
+				{
+					teleport_camera(glm::vec3{ 500,300.0,-49 }, -90, true);
+					fade::fade({ 0,0,0 }, 5);
+				}
+				onlyonce = false;
+			}
+			else
+			{
+				*credit_progress += double(currentFrame - lastFrame) * 0.20;
+				teleport_camera(glm::vec3{ 400,301.0 - *credit_progress,-49 }, -90, true);
+			}
+		}
 		lastFrame = currentFrame;
 
 		roll = std::max<>((player.pos.z - 15.0) * std::abs(player.pos.z / 10.0) * std::abs(player.pos.z / 15.0) * std::abs(player.pos.z / 15.0), 0.0);
@@ -1159,7 +1221,6 @@ int main()
 		cameraPos = player.pos;
 		static bool transition = false;
 		static bool transition2 = false;
-		static std::optional<Player> player_save;
 		if (player.pos.y < -50)
 		{
 			if (transition)
@@ -1230,7 +1291,7 @@ int main()
 			}
 			if (glfwGetKey(window, GLFW_KEY_F7) == GLFW_PRESS)
 			{
-				if (player_save)
+				if (player_save && !credit_progress.has_value())
 				{
 					player = *player_save;
 					yaw = my_yaw;
@@ -1254,7 +1315,11 @@ int main()
 		//glBindVertexArray(VAO);
 
 		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		if (transition2)
+		if (credit_progress.has_value())
+		{
+			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		}
+		else if (transition2)
 		{
 			glClearColor(0.0f, 0.4f, 0.8f, 1.0f);
 		}
@@ -1291,7 +1356,7 @@ int main()
 		for (auto& cube : cubes)
 		{
 			cube.anim_tp = std::max<>(cube.anim_tp - deltaTime, 0.0);
-			if (glm::distance(cube.pos,player.pos) <= 20.0)
+			if (glm::distance(cube.pos,player.pos) <= transition ? 30.0f : 20.0f)
 				cube.render(&ourShader);
 		}
 
