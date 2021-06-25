@@ -22,16 +22,26 @@
 #include "cube.h"
 #include "minesweeper.h"
 #include "fade.h"
+#include "thread"
+#include "chrono"
 //#include "audio.h"
 
 SoLoud::Soloud soloud;
 SoLoud::Wav bg_music;
 SoLoud::Wav bg_music2;
+SoLoud::Wav bg_music3;
+SoLoud::Wav bg_music_crazy;
+SoLoud::Wav bg_music_credits;
 SoLoud::Wav sfx_jump;
 SoLoud::Wav sfx_land;
 
 SoLoud::Wav sfx_pop;
 SoLoud::Wav sfx_boom;
+
+SoLoud::Wav voice0;
+SoLoud::Wav voice1;
+SoLoud::Wav voice2;
+SoLoud::Wav voice3;
 
 Player player;
 std::vector<Cube> cubes;
@@ -63,6 +73,16 @@ bool motion = true;
 extern int ms_offset_t;
 
 SoLoud::handle bg_music2i;
+
+extern double player_speed_m;
+
+void play_voices()
+{
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	soloud.play(voice0);
+	std::this_thread::sleep_for(std::chrono::seconds(3));
+	soloud.play(voice1);
+}
 
 void teleport_camera(glm::vec3 position, float yaw_, bool lock)
 {
@@ -886,12 +906,12 @@ int main()
 
 	//fake blockade
 	auto fake_blockade_index = cubes.size();
-	cubes.push_back(Cube{ glm::vec3{4,0,10 - 1000.0}, &texture3 });
+	/*cubes.push_back(Cube{ glm::vec3{4,0,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{5,0,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{4,1,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{5,1,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{4,2,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{5,2,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{5,2,10 - 1000.0}, &texture3 });*/
 	//
 
 	//mineblocker
@@ -923,9 +943,103 @@ int main()
 		cubes.push_back(Cube{ glm::vec3{9, 7, 11+z}, &texture });
 	}
 	
-	//3RD LEVEL LAB
+	Texture lab_tile = std::string("res/textures/lab/tile.png");
+	Texture lab_tile_v = std::string("res/textures/lab/tile_variation.png");
+	Texture lab_yellow = std::string("res/textures/lab/yellow.png");
+	Texture lab_black = std::string("res/textures/lab/gray.png");
+
+	constexpr std::string_view test_text =
+		"***.***X***.***"
+		".*..*..X*....*."
+		".*..***X***..*."
+		".*..*.XXX.*..*."
+		".*..***X***..*.";
+	for (int x = 0; x < 17; ++x)
+		for (int z = 0; z < 9; ++z)
+	{
+			cubes.push_back(Cube{ glm::vec3{-1000+x,-1,-1000.0+z}, &lab_tile });
+			auto& mycubic = cubes.emplace_back(Cube{ glm::vec3{-1000+x,-1+7,-1000.0+z}, &lab_tile });
+			
+			if (x == 8)
+			{
+				mycubic.texture = &lab_yellow;
+			}
+
+			if (x != 0 && x != 16 && z == 1)
+			{
+				for (int y = 0; y < 5; ++y)
+				{
+					if (test_text.at(x-1+y*15) == '*')
+						cubes.push_back(Cube{ glm::vec3{-1000 + x,4-y,-1000.0 + z}, &lab_tile });
+				}
+			}
+	}
 
 
+	for (int y = 0; y < 6; ++y)
+		for (int x = 0; x < 17; ++x)
+	{
+			if (x != 0 && x != 16 && test_text.at(x - 1 + std::clamp<>(y-1, 0, 4) * 15) == 'X')
+			{
+				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_yellow });
+			}
+			else
+			{
+				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_tile });
+			}
+	}
+
+	for (int y = 0; y < 6; ++y)
+		for (int x = 0; x < 17; ++x)
+		{
+			auto& cube = cubes.emplace_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 + 9}, &lab_tile });
+			if ((y == 3 && x >= 8) || (x==8&&y<=3))
+			{
+				cube.texture = &lab_yellow;
+			}
+			if (x == 7 || x == 9 || x == 8)
+			{
+				if (y == 2 || y == 3 || y == 4)
+				{
+					if (!(y == 3 && x == 8))
+					{
+						//cube.texture = &lab_yellow;
+					}
+					if (y == 3 && x == 8)
+					{
+						//cube.texture = &lab_tile;
+					}
+				}
+			}
+		}
+
+	for (int y = 0; y < 6; ++y)
+		for (int x = 0; x < 17; ++x)
+		{
+			if (x == 7 || x == 9 || x == 8)
+			{
+				if (y == 2 || y == 3 || y == 4)
+				{
+
+				}
+			}
+		}
+
+	for (int y = 0; y < 6; ++y)
+		for (int z = 0; z < 9; ++z)
+		{
+			{
+				cubes.push_back(Cube{ glm::vec3{-1000 -1,5 - y,-1000.0 + z}, &lab_tile });
+			}
+		}
+
+	for (int y = 0; y < 6; ++y)
+		for (int z = 0; z < 9; ++z)
+		{
+			{
+				cubes.push_back(Cube{ glm::vec3{-1000 + 17,5 - y,-1000.0 + z}, &lab_tile });
+			}
+		}
 
 	auto normal_size = cubes.size();
 
@@ -968,6 +1082,9 @@ int main()
 	bg_music2.setLooping(true);
 	bg_music2.setVolume(1.25);
 
+	bg_music_credits.load("res/sounds/starry_dream.mp3");
+	bg_music_credits.setVolume(1.25);
+
 	sfx_jump.load("res/sounds/b1.wav");
 	sfx_jump.setVolume(2.0);
 	sfx_land.load("res/sounds/b0.wav");
@@ -978,11 +1095,36 @@ int main()
 	sfx_boom.load("res/sounds/exp.wav");
 	sfx_boom.setVolume(2.0);
 
+	voice0.load("res/sounds/welcome_to_the_test.wav");
+	voice1.load("res/sounds/follow_line.wav");
+	voice2.load("res/sounds/can_you_just_follow.wav");
+	voice3.load("res/sounds/good_job_on_the_test.wav");
+
+	voice0.setVolume(2.0);
+	voice1.setVolume(2.0);
+	voice2.setVolume(2.0);
+	voice3.setVolume(2.0);
+
+	bg_music3.load("res/sounds/happy_dying_song.mp3");
+	bg_music3.setLooping(true);
+
 	lastFrame = glfwGetTime();
 	ourShader.use();
 	ourShader.setVec3("afog_color", { 0,0,0 });
 	ourShader.setFloat("afog_farz", 10);
 	srand(time(0));
+
+	for (auto& cube : cubes)
+	{
+		if (cube.texture == &lab_tile)
+		{
+			if (rand() % 64 == 0)
+			{
+				cube.texture = &lab_tile_v;
+			}
+		}
+	}
+
 	while (!glfwWindowShouldClose(window))
 	{
 	
@@ -1027,9 +1169,15 @@ int main()
 
 				ourShader.use();
 				ourShader.setVec3("afog_color", glm::vec3{ 0.0,0.4,0.8 });
-				teleport_camera(glm::vec3{ 4.5,1,5 - 1000.0 }, -90, false);
+				teleport_camera(glm::vec3{ 8-1000,1,7 - 1000.0 }, -90, false);
 				fade::fade({ 1,0,1 }, 3);
+				soloud.play(bg_music3);
 				player_save.reset();
+
+				player_speed_m = 1.25;
+
+				std::thread t(play_voices);
+				t.detach();
 			}
 			else
 			{

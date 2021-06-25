@@ -12,6 +12,8 @@ extern bool motion;
 
 extern float yaw;
 
+double player_speed_m = 1.0;
+
 void Player::move_forward(double delta_time, double angle, const std::vector<Cube>& cubes)
 {
 	if (!motion)
@@ -20,7 +22,7 @@ void Player::move_forward(double delta_time, double angle, const std::vector<Cub
 	glm::vec3 old_pos = pos;
 	glm::vec3 new_pos = pos;
 
-	double speed_m = 2.0 - std::min(std::abs(y_velocity / 4.0), 2.0);
+	double speed_m = (2.0 - std::min(std::abs(y_velocity / 4.0), 2.0)) * player_speed_m;
 
 	new_pos.x = pos.x + cos(glm::radians(yaw + angle)) * delta_time * speed_m;
 	new_pos.z = pos.z + sin(glm::radians(yaw + angle)) * delta_time * speed_m;
