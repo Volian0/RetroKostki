@@ -923,6 +923,10 @@ int main()
 		cubes.push_back(Cube{ glm::vec3{9, 7, 11+z}, &texture });
 	}
 	
+	//3RD LEVEL LAB
+
+
+
 	auto normal_size = cubes.size();
 
 	for (int ix = 7 - 11; ix <= 7 + 11; ++ix)
@@ -1012,23 +1016,37 @@ int main()
 		player.gravity(deltaTime, cubes);
 		cameraPos = player.pos;
 		static bool transition = false;
+		static bool transition2 = false;
 		static std::optional<Player> player_save;
 		if (player.pos.y < -50)
 		{
-			if (transition) abort();
-			transition = true;
+			if (transition)
+			{
+				if (transition2) abort();
+				transition2 = true;
 
-			bg_music.stop();
-			bg_music2i = soloud.play(bg_music2);
+				ourShader.use();
+				ourShader.setVec3("afog_color", glm::vec3{ 0.0,0.4,0.8 });
+				teleport_camera(glm::vec3{ 4.5,1,5 - 1000.0 }, -90, false);
+				fade::fade({ 1,0,1 }, 3);
+				player_save.reset();
+			}
+			else
+			{
+				transition = true;
 
-			ourShader.use();
-			ourShader.setVec3("afog_color", glm::vec3{ 0,0.2,0.4 });
-			ourShader.setFloat("afog_farz", 15);
-			teleport_camera(glm::vec3{ 4.5,1,15.5 - 1000.0 }, -90, false);
-			player_save.reset();
-			minesweeper::hard_reset();
+				bg_music.stop();
+				bg_music2i = soloud.play(bg_music2);
 
-			fade::fade({ 1,1,1 }, 5);
+				ourShader.use();
+				ourShader.setVec3("afog_color", glm::vec3{ 0,0.2,0.4 });
+				ourShader.setFloat("afog_farz", 15);
+				teleport_camera(glm::vec3{ 4.5,1,15.5 - 1000.0 }, -90, false);
+				player_save.reset();
+				minesweeper::hard_reset();
+
+				fade::fade({ 1,1,1 }, 5);
+			}
 		}
 
 		static bool blockade_moved = false;
@@ -1088,7 +1106,11 @@ int main()
 		//glBindVertexArray(VAO);
 
 		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		if (transition)
+		if (transition2)
+		{
+			glClearColor(0.0f, 0.4f, 0.8f, 1.0f);
+		}
+		else if (transition)
 		{
 			glClearColor(0.0f, 0.2f, 0.4f, 1.0f);
 		}
