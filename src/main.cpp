@@ -25,6 +25,7 @@
 #include "thread"
 #include "chrono"
 #include "unordered_map"
+#include "sliding.h"
 //#include "audio.h"
 
 SoLoud::Soloud soloud;
@@ -43,6 +44,8 @@ SoLoud::Wav voice0;
 SoLoud::Wav voice1;
 SoLoud::Wav voice2;
 SoLoud::Wav voice3;
+
+SoLoud::Wav roll_loop;
 
 Player player;
 std::vector<Cube> cubes;
@@ -74,6 +77,7 @@ bool motion = true;
 extern int ms_offset_t;
 
 SoLoud::handle bg_music2i;
+SoLoud::handle roll_loopi;
 
 extern double player_speed_m;
 
@@ -147,20 +151,62 @@ void processInput(GLFWwindow* window)
 		return;
 
 	//float cameraSpeed = 2.5 * deltaTime;
-	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS)
+
+	static bool was_up_pressed = false;
+	bool is_up_pressed = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_UP) == GLFW_PRESS;
+
+	static bool was_down_pressed = false;
+	bool is_down_pressed = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS;
+
+	static bool was_left_pressed = false;
+	bool is_left_pressed = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS;
+
+	static bool was_right_pressed = false;
+	bool is_right_pressed = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS;
+
+	if (is_up_pressed)
+	{
 		player.move_forward(deltaTime, 0, cubes);
+		if (!was_up_pressed && sliding::motion_enabled)
+		{
+			sliding::up();
+		}
+	}
 		//cameraPos += cameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_DOWN) == GLFW_PRESS)
+	if (is_down_pressed)
+	{
 		player.move_forward(deltaTime, 180, cubes);
+		if (!was_down_pressed && sliding::motion_enabled)
+		{
+			sliding::down();
+		}
+	}
 		//cameraPos -= cameraSpeed * cameraFront;
-	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_LEFT) == GLFW_PRESS)
+	if (is_left_pressed)
+	{
 		player.move_forward(deltaTime, -90, cubes);
+		if (!was_left_pressed && sliding::motion_enabled)
+		{
+			sliding::left();
+		}
+	}
 		//cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
-	if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_RIGHT) == GLFW_PRESS)
+	if (is_right_pressed)
+	{
 		player.move_forward(deltaTime, 90, cubes);
+		if (!was_right_pressed && sliding::motion_enabled)
+		{
+			sliding::right();
+		}
+	}
 	if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)
 		player.jump();
 		//cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * cameraSpeed;
+
+	was_up_pressed = is_up_pressed;
+	was_down_pressed = is_down_pressed;
+	was_left_pressed = is_left_pressed;
+	was_right_pressed = is_right_pressed;
 }
 
 // glfw: whenever the window size changed (by OS or user resize) this callback function executes
@@ -228,7 +274,7 @@ int main()
 	// ------------------------------
 	glfwInit();
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
+	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 2);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
 	// glfw window creation
@@ -1020,10 +1066,102 @@ int main()
 				if (a ^ b)
 				{
 					auto& cubic = cubes.emplace_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 + z}, &lab_tile, 1 });
-					if (z == 8 && y == 3)
+					if ((z == 8 && y == 3 && x < 18+10) || (x == 17 + 10 && z == 8 && y < 3) || (y == 1 && x == 17 + 10))
 						cubic.texture = &lab_yellow;
 				}
 			}
+
+	for (int x = 0; x < 3; ++x)
+		for (int z = 0; z < 6; ++z)
+		{
+			auto& cubic = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + x,0,-1000.0 - z - 1 - 3 + 8}, &lab_tile, 1 });
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + x,4,-1000.0 - z - 1 - 3 + 8}, &lab_tile, 1 });
+			if (x == 1)
+			{
+				cubic2.texture = &lab_yellow;
+			}
+		}
+
+	for (int x = 0; x < 12; ++x)
+		for (int y = 0; y < 3; ++y)
+	{
+		auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + x - 3,y+1,-1000.0 - 6 - 1 - 3 + 8}, &lab_tile, 1 });
+		if ((y == 1 && x >= 4)||(x == 4 && y >= 2))
+		{
+			cubic2.texture = &lab_yellow;
+		}
+	}
+
+	for (int x = 0; x < 6; ++x)
+		for (int z = 0; z < 3; ++z)
+		{
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 6,0,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+			auto& cubic3 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 6,4,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+		}
+
+	for (int x = 0; x < 3; ++x)
+		for (int z = 0; z < 3; ++z)
+		{
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x-6 - 6,0,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+			auto& cubic3 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x-6 - 6,4,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+		}
+
+	for (int x = 0; x < 3; ++x)
+		for (int z = 0; z < 3; ++z)
+		{
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 9 - 6,0,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+			auto& cubic3 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 9 - 6,4,-1000.0 - 6 - 1 - 3 + 8 - z + 3}, &lab_tile, 1 });
+		}
+
+	for (int x = 0; x < 3; ++x)
+		for (int z = 0; z < 6; ++z)
+		{
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 9 - 6,0,-1000.0 - 6 - 1 - 3 + 8 - z + 0}, &lab_tile, 1 });
+			auto& cubic3 = cubes.emplace_back(Cube{ glm::vec3{-1000 + 18 + 8 + 9 + x - 9 - 6,4,-1000.0 - 6 - 1 - 3 + 8 - z + 0}, &lab_tile, 1 });
+		}
+
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 5; ++y)
+		{
+			auto zz1 = (z == 0 || z == 4);
+			auto zz2 = (y == 0 || y == 4);
+			if (zz1 ^ zz2)
+			auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965,y,-998 - z}, &lab_black, 1 });
+		}
+
+	cubes.emplace_back(Cube{ glm::vec3{-965,4,-998 - 0}, &lab_black, 1 });
+	cubes.emplace_back(Cube{ glm::vec3{-965,4,-998 - 4}, &lab_black, 1 });
+
+	for (int x = 0; x < 6; ++x)
+	for (int z = 0; z < 7; ++z)
+		for (int y = 0; y < 6; ++y)
+		{
+			auto zz1 = (z == 0 || z == 6);
+			auto zz2 = (y == 0 || y == 5);
+			if (zz1 ^ zz2)
+				auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965+x+1,y,-998 - z + 1}, &lab_black, 1 });
+		}
+
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 5; ++y)
+		{
+			auto zz1 = (z == 0 || z == 4);
+			auto zz2 = (y == 0 || y == 4);
+			if (zz1 ^ zz2)
+				auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965+6+1,y,-998 - z}, &lab_black, 1 });
+		}
+
+
+	cubes.emplace_back(Cube{ glm::vec3{-965+6+1,4,-998 - 0}, &lab_black, 1 });
+	cubes.emplace_back(Cube{ glm::vec3{-965+6+1,4,-998 - 4}, &lab_black, 1 });
+
+	auto yacie_blockade_lab = cubes.size();
+
+	cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 1,2,-998 - 1}, &lab_black, false });
+	cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 1,2,-998 - 2}, &lab_black, false });
+	cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 1,2,-998 - 3}, &lab_black, false });
+
+	auto yacie_blockade_lab_end = cubes.size();
 
 	auto normal_size = cubes.size();
 
@@ -1091,6 +1229,11 @@ int main()
 
 	bg_music3.load("res/sounds/happy_dying_song.mp3");
 	bg_music3.setLooping(true);
+
+	roll_loop.load("res/sounds/roll_loop.wav");
+	roll_loop.setLooping(true);
+	roll_loop.setVolume(0);
+	roll_loopi = soloud.play(roll_loop);
 
 	lastFrame = glfwGetTime();
 	ourShader.use();
@@ -1255,19 +1398,41 @@ int main()
 		roll = std::max<>((player.pos.z - 15.0) * std::abs(player.pos.z / 10.0) * std::abs(player.pos.z / 15.0) * std::abs(player.pos.z / 15.0), 0.0);
 		static bool transition = false;
 		if (!transition)
-		for (auto& cube : cubes)
 		{
-			if (cube.texture != &texture2 && cube.texture != &texture)
+			if (player.pos.z > 11)
 			{
-				continue;
-			}
-			if (unsigned(cube.pos.x + cube.pos.y + cube.pos.z) % 4 == yacieowo % 4)
-			{
-				cube.texture = &texture2;
+				soloud.setPause(roll_loopi, false);
+				soloud.setVolume(roll_loopi, std::clamp((player.pos.z - 10.0) / 20.0, 0.25, 0.75));
+				soloud.setRelativePlaySpeed(roll_loopi, std::clamp((player.pos.z - 10.0) / 30.0, 0.5, 4.0));
+				soloud.setPan(roll_loopi, sin(glm::radians(roll)));
 			}
 			else
 			{
-				cube.texture = &texture;
+				soloud.setPause(roll_loopi, true);
+			}
+			for (auto& cube : cubes)
+			{
+				if (cube.texture != &texture2 && cube.texture != &texture)
+				{
+					continue;
+				}
+				if (unsigned(cube.pos.x + cube.pos.y + cube.pos.z) % 4 == yacieowo % 4)
+				{
+					cube.texture = &texture2;
+				}
+				else
+				{
+					cube.texture = &texture;
+				}
+			}
+		}
+		else
+		{
+			static bool angry_voice = false;
+			if (!angry_voice && player.pos.x >= -980.0 && player.pos.x <= -978 && player.pos.z <= -2.0 - 1000.0+3.0 && player.pos.z >= -5.0 - 1000.0+3.0)
+			{
+				angry_voice = true;
+				soloud.play(voice2);
 			}
 		}
 
@@ -1296,11 +1461,15 @@ int main()
 
 				player_speed_m = 1.25;
 
+				//sliding::init();
+				//sliding::enable();
+
 				std::thread t(play_voices);
 				t.detach();
 			}
 			else
 			{
+				roll_loop.stop();
 				transition = true;
 
 				bg_music.stop();
@@ -1336,8 +1505,37 @@ int main()
 				cubes.erase(cubes.begin() + mineblocker_index);
 			}
 		}
+		static bool inited_ss = false;
+		static bool started_ss = false;
+		if (!inited_ss && player.pos.x > -968.0 + 2.0 && player.pos.z < -900.0 && player.pos.x < -800.0f)
+		{
+			std::cout << player.pos.x << std::endl;
+			std::cout << player.pos.z << std::endl;
+			inited_ss = true;
+			sliding::init();
+		}
+		if (inited_ss && !started_ss && player.pos.x > -964.0 + 2.5 && player.pos.z < -900.0 && player.pos.x < -800.0f)
+		{
+			started_ss = true;
+			sliding::enable();
 
-		if (motion)
+			for (int i = yacie_blockade_lab; i < yacie_blockade_lab_end; ++i)
+			{
+				auto& cube_pos = cubes[i].pos;
+				cube_pos.x -= 7.0;
+			}
+
+			teleport_camera(glm::vec3(-964.0 + 2.5, 2.0, -1000.0 + 1.5), -90, false);
+			fade::fade({ 0,0,0 }, 1.0);
+		}
+
+		if (sliding::init)
+		{
+			sliding::update(deltaTime);
+		}
+
+
+		if (motion && !sliding::motion_enabled)
 		{
 			
 			static float my_yaw;
@@ -1363,6 +1561,10 @@ int main()
 					cameraFront = glm::normalize(front);
 				}
 			}
+		}
+		else
+		{
+			player_save.reset();
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
@@ -1423,6 +1625,10 @@ int main()
 				continue;
 
 				cube.render(&ourShader);
+		}
+		if (sliding::inited)
+		{
+			sliding::render(&ourShader);
 		}
 		//render static boxes
 		glm::mat4 model = glm::mat4(1.0f);

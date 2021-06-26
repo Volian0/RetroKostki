@@ -86,6 +86,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="src\sliding.cpp" />
     <ClCompile Include="src\fade.cpp" />
     <ClCompile Include="src\minesweeper.cpp" />
     <ClCompile Include="src\player.cpp" />
@@ -95,6 +96,7 @@
     <ClCompile Include="src\texture.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\sliding.h" />
     <ClInclude Include="src\fade.h" />
     <ClInclude Include="src\minesweeper.h" />
     <ClInclude Include="src\audio.h" />
