@@ -18,11 +18,11 @@ struct Cube
 
 	inline void render(class Shader* shader)
 	{
-		if (discovered)
-			render_cube(pos, texture, shader, anim_tp);
+		render_cube(pos, texture, shader, anim_tp);
 	}
 
-	bool discovered = true;
+	//bool discovered = true;
+	bool is_static = false;
 	double anim_tp = 0.0;
-	uint8_t offset = 0;
+	//uint8_t offset = 0;
 };

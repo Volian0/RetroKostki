@@ -27,7 +27,7 @@ namespace minesweeper
     std::array<bool, 64> tiles1;
     std::array<uint8_t, 64> tiles2;
 
-    int mines = 1; //set it to 9!
+    int mines = 9; //set it to 9!
     int uncovered = 0;
 }
 

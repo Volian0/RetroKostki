@@ -24,6 +24,7 @@
 #include "fade.h"
 #include "thread"
 #include "chrono"
+#include "unordered_map"
 //#include "audio.h"
 
 SoLoud::Soloud soloud;
@@ -241,7 +242,7 @@ int main()
 
 	glfwMakeContextCurrent(window);
 
-	glfwSwapInterval(0);
+	//glfwSwapInterval(0);
 
 	glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 	glfwSetCursorPosCallback(window, mouse_callback);
@@ -261,77 +262,7 @@ int main()
 
 	// set up vertex data (and buffer(s)) and configure vertex attributes
 	// ------------------------------------------------------------------
-	float vertices[] = {
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
 
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
-
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
-		 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
-		-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
-		-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
-	};
-	// world space positions of our cubes
-	glm::vec3 cubePositions[] = {
-		glm::vec3(0.0f,  0.0f,  0.0f),
-		glm::vec3(2.0f,  5.0f, -15.0f),
-		glm::vec3(-1.5f, -2.2f, -2.5f),
-		glm::vec3(-3.8f, -2.0f, -12.3f),
-		glm::vec3(2.4f, -0.4f, -3.5f),
-		glm::vec3(-1.7f,  3.0f, -7.5f),
-		glm::vec3(1.3f, -2.0f, -2.5f),
-		glm::vec3(1.5f,  2.0f, -2.5f),
-		glm::vec3(1.5f,  0.2f, -1.5f),
-		glm::vec3(-1.3f,  1.0f, -1.5f)
-	};
-	unsigned int VBO, VAO;
-	glGenVertexArrays(1, &VAO);
-	glGenBuffers(1, &VBO);
-
-	glBindVertexArray(VAO);
-
-	glBindBuffer(GL_ARRAY_BUFFER, VBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-	// position attribute
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(0);
-	// texture coord attribute
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
 
 
 	
@@ -490,27 +421,26 @@ int main()
 	Texture credit4("res/textures/post_credit.png");
 	Texture black("res/textures/black.png");
 
-	cubes.push_back(Cube{ glm::vec3{300,300,-50}, &text1 });
-	cubes.push_back(Cube{ glm::vec3{310,300,-50}, &text2 });
-	cubes.push_back(Cube{ glm::vec3{320,300,-50}, &text3 });
-	cubes.push_back(Cube{ glm::vec3{330,300,-50}, &text4 });
-	cubes.push_back(Cube{ glm::vec3{400,300,-50}, &credit1 });
-	cubes.push_back(Cube{ glm::vec3{400,299,-50}, &credit2 });
-	cubes.push_back(Cube{ glm::vec3{400,298,-50}, &credit3 });
-	cubes.push_back(Cube{ glm::vec3{400,297,-50}, &black });
-	cubes.push_back(Cube{ glm::vec3{400,301,-50}, &black });
-	cubes.push_back(Cube{ glm::vec3{500,300,-50}, &credit4 });
+	cubes.push_back(Cube{ glm::vec3{300,300,-50}, &text1, 1 });
+	cubes.push_back(Cube{ glm::vec3{310,300,-50}, &text2,1 });
+	cubes.push_back(Cube{ glm::vec3{320,300,-50}, &text3,1 });
+	cubes.push_back(Cube{ glm::vec3{330,300,-50}, &text4,1 });
+	cubes.push_back(Cube{ glm::vec3{400,300,-50}, &credit1,1 });
+	cubes.push_back(Cube{ glm::vec3{400,299,-50}, &credit2,1 });
+	cubes.push_back(Cube{ glm::vec3{400,298,-50}, &credit3,1 });
+	cubes.push_back(Cube{ glm::vec3{400,297,-50}, &black,1 });
+	cubes.push_back(Cube{ glm::vec3{400,301,-50}, &black,1 });
+	cubes.push_back(Cube{ glm::vec3{500,300,-50}, &credit4,1 });
 
 	teleport_camera(glm::vec3{ 300,300,-49 }, -90, true);
 	
-	//for (int x = 0; x < 10; ++x)
-		//for (int y = 0; y < 10; ++y)
-			//cubes.push_back(Cube{ glm::vec3{x,-1,y}, &texture });
+	for (int x = 0; x < 10; ++x)
+		for (int y = 0; y < 10; ++y)
+			cubes.push_back(Cube{ glm::vec3{x,-1,y}, &texture });
 
 	for (int x = 0; x < 10; ++x)
 		for (int y = 0; y < 10; ++y)
 			cubes.push_back(Cube{ glm::vec3{x,10,y}, &texture });
-
 
 	for (int x = 0; x < 10; ++x)
 		for (int y = 0; y < 10; ++y)
@@ -644,7 +574,7 @@ int main()
 		{
 			if (x == 0 || y == 0 || x == 9 || y == 9)
 			{
-				cubes.push_back(Cube{ glm::vec3{x,-1,double(y) - 1000.0}, &texture3 });
+				cubes.push_back(Cube{ glm::vec3{x,-1,double(y) - 1000.0}, &texture3, true });
 			}
 		}
 
@@ -661,7 +591,7 @@ int main()
 
 	for (int x = 0; x < 10; ++x)
 		for (int y = 0; y < 10; ++y)
-			cubes.push_back(Cube{ glm::vec3{x,5,double(y)-1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{x,5,double(y)-1000.0}, &texture3, true });
 
 
 	for (int x = 0; x < 5; ++x)
@@ -675,7 +605,7 @@ int main()
 					continue;
 				}
 			}
-			cubes.push_back(Cube{ glm::vec3{-1,x,double(y) - 1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{-1,x,double(y) - 1000.0}, &texture3, true });
 		}
 
 
@@ -691,7 +621,7 @@ int main()
 					continue;
 				}
 			}
-			cubes.push_back(Cube{ glm::vec3{10,x,double(y) - 1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{10,x,double(y) - 1000.0}, &texture3, true });
 		}
 
 
@@ -709,7 +639,7 @@ int main()
 				if (x >= 3 && x <= 6)
 					continue;
 			}
-			cubes.push_back(Cube{ glm::vec3{x,y,-1.0 - 1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{x,y,-1.0 - 1000.0}, &texture3, true });
 		}
 
 	for (int x = 0; x < 10; ++x)
@@ -725,7 +655,7 @@ int main()
 				if (x >= 3 && x <= 6)
 					continue;
 			}
-			cubes.push_back(Cube{ glm::vec3{x,y,10.0-1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{x,y,10.0-1000.0}, &texture3, true });
 		}
 
 	auto z_z_index = cubes.size();
@@ -735,210 +665,210 @@ int main()
 		for (long y = 0; y < 10; ++y)
 		{
 			//floor
-			cubes.push_back(Cube{ glm::vec3{-2-x,0,5 + y - 1000.0}, &texture3 });
+			cubes.push_back(Cube{ glm::vec3{-2-x,0,5 + y - 1000.0}, &texture3, true });
 
 			//ceiling
 			if (y == 9-0 || y == 9-3 || y == 9-5)
 			{
-				cubes.push_back(Cube{ glm::vec3{-2 - x,4,5 + y - 1000.0}, &texture3 });
+				cubes.push_back(Cube{ glm::vec3{-2 - x,4,5 + y - 1000.0}, &texture3, true });
 			}
-			else cubes.push_back(Cube{ glm::vec3{-2 - x,5,5 + y - 1000.0}, &texture3 });
+			else cubes.push_back(Cube{ glm::vec3{-2 - x,5,5 + y - 1000.0}, &texture3, true });
 
 			if (y < 2 && x == 0)
 			{
-				cubes.push_back(Cube{ glm::vec3{-4,0,5 + y - 1000.0}, &texture3 });
-				cubes.push_back(Cube{ glm::vec3{-4,5,5 + y - 1000.0}, &texture3 });
+				cubes.push_back(Cube{ glm::vec3{-4,0,5 + y - 1000.0}, &texture3, true });
+				cubes.push_back(Cube{ glm::vec3{-4,5,5 + y - 1000.0}, &texture3, true });
 			}
 		}
 	}
 
-	cubes.push_back(Cube{ glm::vec3{-5,1,5 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-6,2,5 - 1000.0}, &texture4 });
-	cubes.push_back(Cube{ glm::vec3{-6,3,5 - 1000.0}, &texture4 });
-	cubes.push_back(Cube{ glm::vec3{-5,4,5 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-5,1,5 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-6,2,5 - 1000.0}, &texture4,1 });
+	cubes.push_back(Cube{ glm::vec3{-6,3,5 - 1000.0}, &texture4,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,4,5 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-5,1,6 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-5,2,6 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-5,3,6 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-5,4,6 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-5,1,6 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,2,6 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,3,6 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,4,6 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-4,1,7 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,7 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,7 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,4,7 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,1,8 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,8 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,8 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,4,8 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,7 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,7 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,7 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,4,7 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,8 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,8 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,8 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,4,8 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-4,1,9 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,9 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,9 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,9 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,9 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,9 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-5,1,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-5,2,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-5,3,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,4,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-5,1,10 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,2,10 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-5,3,10 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,4,10 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-4,0,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,0,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,4,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,0,10 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-1,0,10 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-1,4,10 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-4,1,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,11 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,11 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,11 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,11 - 1000.0}, &texture3,1 });
 
-	cubes.push_back(Cube{ glm::vec3{-4,1,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,14 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,14 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,14 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,14 - 1000.0}, &texture3,1 });
 	//
-	cubes.push_back(Cube{ glm::vec3{-3,3,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-2,3,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-3,2,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-2,2,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-3,1,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-2,1,15 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-3,3,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-2,3,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-3,2,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-2,2,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-3,1,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-2,1,15 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{-1,3,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,2,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,1,14 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-1,3,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,2,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,1,14 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{-1,3,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,2,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,1,11 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-1,3,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,2,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,1,11 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{-1,0,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,0,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,0,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,0,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,4,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,4,13 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-1,0,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,0,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,0,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,0,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,4,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,4,13 - 1000.0}, &texture3, 1 });
 	//
-	cubes.push_back(Cube{ glm::vec3{-4,1,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,4,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,1,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,2,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,3,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-4,4,13 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,4,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,1,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,2,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,3,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-4,4,13 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{-1,4,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{-1,4,11 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{-1,4,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{-1,4,11 - 1000.0}, &texture3, 1 });
 
 	for (int x = 0; x < 2; ++x)
 	{
-		cubes.push_back(Cube{ glm::vec3{0,6*x-1,14 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{0,6*x-1,13 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{0,6*x-1,12 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{0,6*x-1,11 - 1000.0}, &texture3 });
+		cubes.push_back(Cube{ glm::vec3{0,6 * x - 1,14 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{0,6 * x - 1,13 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{0,6 * x - 1,12 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{0,6 * x - 1,11 - 1000.0}, &texture3, 1 });
 
-		cubes.push_back(Cube{ glm::vec3{2,6*x-1,14 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{2,6*x-1,13 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{2,6*x-1,12 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{2,6*x-1,11 - 1000.0}, &texture3 });
+		cubes.push_back(Cube{ glm::vec3{2,6 * x - 1,14 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{2,6 * x - 1,13 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{2,6 * x - 1,12 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{2,6 * x - 1,11 - 1000.0}, &texture3, 1 });
 
-		cubes.push_back(Cube{ glm::vec3{1,7*x-1,14 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{1,7*x-1,13 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{1,7*x-1,12 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{1,7*x-1,11 - 1000.0}, &texture3 });
+		cubes.push_back(Cube{ glm::vec3{1,7 * x - 1,14 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{1,7 * x - 1,13 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{1,7 * x - 1,12 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{1,7 * x - 1,11 - 1000.0}, &texture3, 1 });
 	}
-	
-	cubes.push_back(Cube{ glm::vec3{3,-1,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,-1,13 - 1000.0}, &texture3 });
 
-	cubes.push_back(Cube{ glm::vec3{3,-1,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,-1,16 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,-1,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,-1,13 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{4,-1,17 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,16 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,-1,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,-1,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,-1,16 - 1000.0}, &texture3, 1 });
+
+	cubes.push_back(Cube{ glm::vec3{4,-1,17 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,16 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,-1,10 - 1000.0}, &texture3, 1 });
 
 
-	cubes.push_back(Cube{ glm::vec3{3,-1,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,-1,10 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{3,3,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,3,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,3,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,3,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,4,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,4,12 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,4,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,4,14 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,3,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,3,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,3,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,3,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,4,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,4,12 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,4,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,4,14 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{3,2,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,2,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,1,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,1,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,0,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,0,14 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,2,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,2,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,1,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,1,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,0,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,0,14 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{4,3,11 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,3,14 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,3,17 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{4,3,11 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,3,14 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,3,17 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{4,4,16 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,4,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,4,13 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,4,12 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{4,4,16 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,4,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,4,13 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{4,4,12 - 1000.0}, &texture3, 1 });
 
 	for (int i = 0; i < 5; ++i)
 	{
-		cubes.push_back(Cube{ glm::vec3{0,i,15 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{1,i,15 - 1000.0}, &texture3 });
-		cubes.push_back(Cube{ glm::vec3{2,i,15 - 1000.0}, &texture3 });
+		cubes.push_back(Cube{ glm::vec3{0,i,15 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{1,i,15 - 1000.0}, &texture3, 1 });
+		cubes.push_back(Cube{ glm::vec3{2,i,15 - 1000.0}, &texture3, 1 });
 	}
-	cubes.push_back(Cube{ glm::vec3{1,5,15 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{1,5,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{1,5,15 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{1,5,10 - 1000.0}, &texture3, 1 });
 
 
 
-	cubes.push_back(Cube{ glm::vec3{3,0,17 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,1,17 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,2,17 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,0,17 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,1,17 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,2,17 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{3,3,16 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{3,3,15 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{3,3,16 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{3,3,15 - 1000.0}, &texture3, 1 });
 
-	cubes.push_back(Cube{ glm::vec3{2,0,16 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{2,1,16 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{2,2,16 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{2,0,16 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{2,1,16 - 1000.0}, &texture3, 1 });
+	cubes.push_back(Cube{ glm::vec3{2,2,16 - 1000.0}, &texture3, 1 });
 
 	auto z_z_index2 = cubes.size();
 
 	for (int i = z_z_index; i < z_z_index2; ++i)
 	{
 		auto& cube = cubes[i];
-		cubes.push_back(Cube{ glm::vec3{cube.pos.x,cube.pos.y,-996 - (995 + cube.pos.z)}, cube.texture });
+		cubes.push_back(Cube{ glm::vec3{cube.pos.x,cube.pos.y,-996 - (995 + cube.pos.z)}, cube.texture, 1 });
 	}
 	z_z_index2 = cubes.size();
 	for (int i = z_z_index; i < z_z_index2; ++i)
 	{
 		auto& cube = cubes[i];
-		cubes.push_back(Cube{ glm::vec3{cube.pos.x * (-1) + 9,cube.pos.y,cube.pos.z}, cube.texture });
+		cubes.push_back(Cube{ glm::vec3{cube.pos.x * (-1) + 9,cube.pos.y,cube.pos.z}, cube.texture, 1 });
 	}
 	////////////////////////
 
-	cubes.push_back(Cube{ glm::vec3{4,0,18 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,1,18 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{4,2,18 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{5,0,18 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{5,1,18 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{5,2,18 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{4,0,18 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{4,1,18 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{4,2,18 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{5,0,18 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{5,1,18 - 1000.0}, &texture3,1 });
+	cubes.push_back(Cube{ glm::vec3{5,2,18 - 1000.0}, &texture3,1 });
 
 	//fake blockade
 	auto fake_blockade_index = cubes.size();
-	/*cubes.push_back(Cube{ glm::vec3{4,0,10 - 1000.0}, &texture3 });
+	cubes.push_back(Cube{ glm::vec3{4,0,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{5,0,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{4,1,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{5,1,10 - 1000.0}, &texture3 });
 	cubes.push_back(Cube{ glm::vec3{4,2,10 - 1000.0}, &texture3 });
-	cubes.push_back(Cube{ glm::vec3{5,2,10 - 1000.0}, &texture3 });*/
+	cubes.push_back(Cube{ glm::vec3{5,2,10 - 1000.0}, &texture3 });
 	//
 
 	//mineblocker
@@ -984,8 +914,8 @@ int main()
 	for (int x = 0; x < 17; ++x)
 		for (int z = 0; z < 9; ++z)
 	{
-			cubes.push_back(Cube{ glm::vec3{-1000+x,-1,-1000.0+z}, &lab_tile });
-			auto& mycubic = cubes.emplace_back(Cube{ glm::vec3{-1000+x,-1+7,-1000.0+z}, &lab_tile });
+			cubes.push_back(Cube{ glm::vec3{-1000+x,-1,-1000.0+z}, &lab_tile, 1 });
+			auto& mycubic = cubes.emplace_back(Cube{ glm::vec3{-1000+x,-1+7,-1000.0+z}, &lab_tile, 1 });
 			
 			if (x == 8)
 			{
@@ -997,7 +927,7 @@ int main()
 				for (int y = 0; y < 5; ++y)
 				{
 					if (test_text.at(x-1+y*15) == '*')
-						cubes.push_back(Cube{ glm::vec3{-1000 + x,4-y,-1000.0 + z}, &lab_tile });
+						cubes.push_back(Cube{ glm::vec3{-1000 + x,4-y,-1000.0 + z}, &lab_tile, 1 });
 				}
 			}
 	}
@@ -1008,18 +938,18 @@ int main()
 	{
 			if (x != 0 && x != 16 && test_text.at(x - 1 + std::clamp<>(y-1, 0, 4) * 15) == 'X')
 			{
-				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_yellow });
+				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_yellow, 1 });
 			}
 			else
 			{
-				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_tile });
+				cubes.push_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 - 1}, &lab_tile, 1 });
 			}
 	}
 
 	for (int y = 0; y < 6; ++y)
 		for (int x = 0; x < 17; ++x)
 		{
-			auto& cube = cubes.emplace_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 + 9}, &lab_tile });
+			auto& cube = cubes.emplace_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 + 9}, &lab_tile, 1 });
 			if ((y == 3 && x >= 8) || (x==8&&y<=3))
 			{
 				cube.texture = &lab_yellow;
@@ -1056,7 +986,7 @@ int main()
 		for (int z = 0; z < 9; ++z)
 		{
 			{
-				cubes.push_back(Cube{ glm::vec3{-1000 -1,5 - y,-1000.0 + z}, &lab_tile });
+				cubes.push_back(Cube{ glm::vec3{-1000 -1,5 - y,-1000.0 + z}, &lab_tile, 1 });
 			}
 		}
 
@@ -1064,9 +994,36 @@ int main()
 		for (int z = 0; z < 9; ++z)
 		{
 			{
-				//cubes.push_back(Cube{ glm::vec3{-1000 + 17,5 - y,-1000.0 + z}, &lab_tile });
+				if (z > 4 && z < 8)
+				{
+					if (y < 5 && y > 1)
+					{
+						continue;
+					}
+				}
+				auto& cubic = cubes.emplace_back(Cube{ glm::vec3{-1000 + 17,5 - y,-1000.0 + z}, &lab_tile, 1 });
+				if (z > 5 && y == 3)
+					cubic.texture = &lab_yellow;
 			}
 		}
+
+	for (int z = 4; z <= 8;++z)
+		for (int y = 1; y <= 5;++y)
+			for (int x = 18; x < 18 + 11;++x)
+			{
+				bool a = (z == 4 || z == 8);
+				bool b = (y == 1 || y == 5);
+				if (x > 18 + 7 && z == 4)
+				{
+					continue;
+				}
+				if (a ^ b)
+				{
+					auto& cubic = cubes.emplace_back(Cube{ glm::vec3{-1000 + x,5 - y,-1000.0 + z}, &lab_tile, 1 });
+					if (z == 8 && y == 3)
+						cubic.texture = &lab_yellow;
+				}
+			}
 
 	auto normal_size = cubes.size();
 
@@ -1152,6 +1109,105 @@ int main()
 		}
 	}
 
+	float vertices[] = {
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f, -0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f, -0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f,
+	 0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	 0.5f,  0.5f,  0.5f,  1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  0.0f, 1.0f
+	};
+	// world space positions of our cubes
+
+	std::vector<float> c_vertices;
+
+	for (unsigned i = 0; i < 180; ++i)
+	{
+		c_vertices.push_back(vertices[i]);
+	}
+
+	std::unordered_map<Texture*, unsigned> c_offsets;
+	std::unordered_map<Texture*, unsigned> c_count;
+	std::unordered_map<Texture*, std::vector<glm::vec3>> c_positions;
+	for (auto& cube : cubes)
+	{
+		if (cube.is_static)
+		{
+			c_positions[cube.texture].push_back(cube.pos);
+		}
+	}
+	for (auto& [txt, pos] : c_positions)
+	{
+		c_offsets[txt] = c_vertices.size();
+		c_count[txt] = pos.size();
+		for (auto& my_pos : pos)
+		{
+			for (int i = 0; i < 36; ++i)
+			{
+				float x = vertices[i * 5];
+				float y = vertices[i * 5 + 1];
+				float z = vertices[i * 5 + 2];
+				c_vertices.push_back(x + my_pos.x);
+				c_vertices.push_back(y + my_pos.y);
+				c_vertices.push_back(z + my_pos.z);
+				c_vertices.push_back(vertices[i * 5 + 3]);
+				c_vertices.push_back(vertices[i * 5 + 4]);
+			}
+		}
+	}
+
+	c_positions.clear();
+
+	unsigned int VBO, VAO;
+	glGenVertexArrays(1, &VAO);
+	glGenBuffers(1, &VBO);
+
+	glBindVertexArray(VAO);
+
+	glBindBuffer(GL_ARRAY_BUFFER, VBO);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * c_vertices.size(), c_vertices.data(), GL_STATIC_DRAW);
+
+	// position attribute
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+	// texture coord attribute
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(1);
 
 	///
 	//start_credits();
@@ -1170,7 +1226,7 @@ int main()
 		
 		if (uint32_t(currentFrame) > clock)
 		{
-			std::cout << "FPS: " << frames << std::endl;
+			//std::cout << "FPS: " << frames << std::endl;
 			frames = 0;
 			clock++;
 		}
@@ -1197,7 +1253,8 @@ int main()
 		lastFrame = currentFrame;
 
 		roll = std::max<>((player.pos.z - 15.0) * std::abs(player.pos.z / 10.0) * std::abs(player.pos.z / 15.0) * std::abs(player.pos.z / 15.0), 0.0);
-
+		static bool transition = false;
+		if (!transition)
 		for (auto& cube : cubes)
 		{
 			if (cube.texture != &texture2 && cube.texture != &texture)
@@ -1219,9 +1276,10 @@ int main()
 		processInput(window);
 		player.gravity(deltaTime, cubes);
 		cameraPos = player.pos;
-		static bool transition = false;
 		static bool transition2 = false;
-		if (player.pos.y < -50)
+		static bool was_sskip_pressed = false;
+		bool is_sskip_pressed = glfwGetKey(window, GLFW_KEY_F9) == GLFW_PRESS;
+		if (player.pos.y < -50 || (is_sskip_pressed && !was_sskip_pressed))
 		{
 			if (transition)
 			{
@@ -1232,6 +1290,7 @@ int main()
 				ourShader.setVec3("afog_color", glm::vec3{ 0.0,0.4,0.8 });
 				teleport_camera(glm::vec3{ 8-1000,1,7 - 1000.0 }, -90, false);
 				fade::fade({ 1,0,1 }, 3);
+				soloud.stopAll();
 				soloud.play(bg_music3);
 				player_save.reset();
 
@@ -1257,7 +1316,7 @@ int main()
 				fade::fade({ 1,1,1 }, 5);
 			}
 		}
-
+		was_sskip_pressed = is_sskip_pressed;
 		static bool blockade_moved = false;
 		if (!blockade_moved && player.pos.z < -991)
 		{
@@ -1356,10 +1415,29 @@ int main()
 		for (auto& cube : cubes)
 		{
 			cube.anim_tp = std::max<>(cube.anim_tp - deltaTime, 0.0);
-			if (glm::distance(cube.pos,player.pos) <= transition ? 30.0f : 20.0f)
+			//if (glm::distance(cube.pos,player.pos) <= transition ? 30.0f : 20.0f)
+			if (cube.is_static)
+				continue;
+
+			if ((!transition) ^ (cube.texture == &texture || cube.texture == &texture2))
+				continue;
+
 				cube.render(&ourShader);
 		}
+		//render static boxes
+		glm::mat4 model = glm::mat4(1.0f);
+		ourShader.setMat4("model", model);
+		for (auto& [txt, offset] : c_offsets)
+		{
+			if ((transition ^ transition2) ^ (txt == &texture3))
+				continue;
+			if (transition2 ^ (txt == &lab_black || txt == &lab_yellow || txt == &lab_tile_v || txt == &lab_tile))
+				continue;
 
+			txt->use();
+			
+			glDrawArrays(GL_TRIANGLES, c_offsets[txt] / 5U, c_count[txt] * 36U);
+		}
 		// second pass
 		glBindFramebuffer(GL_FRAMEBUFFER, 0); // back to default
 		glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
