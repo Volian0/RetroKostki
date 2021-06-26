@@ -1507,10 +1507,9 @@ int main()
 		}
 		static bool inited_ss = false;
 		static bool started_ss = false;
+		static bool won_ss = false;
 		if (!inited_ss && player.pos.x > -968.0 + 2.0 && player.pos.z < -900.0 && player.pos.x < -800.0f)
 		{
-			std::cout << player.pos.x << std::endl;
-			std::cout << player.pos.z << std::endl;
 			inited_ss = true;
 			sliding::init();
 		}
@@ -1526,7 +1525,13 @@ int main()
 			}
 
 			teleport_camera(glm::vec3(-964.0 + 2.5, 2.0, -1000.0 + 1.5), -90, false);
-			fade::fade({ 0,0,0 }, 1.0);
+			fade::fade({ 0,0,0 }, 0.25);
+		}
+
+		if (started_ss && !won_ss && player.pos.x > -964.0 + 2.5 + 3.0 && player.pos.z < -900.0 && player.pos.x < -800.0f)
+		{
+			won_ss = true;
+			soloud.play(voice3);
 		}
 
 		if (sliding::init)

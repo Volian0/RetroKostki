@@ -3,6 +3,8 @@
 
 #include <algorithm>
 
+#include "soloud_wav.h"
+
 extern double player_speed_m;
 
 
@@ -106,9 +108,12 @@ bool sliding::is_win()
 	return false;
 }
 
+extern SoLoud::Soloud soloud;
+extern SoLoud::Wav voice3;
+
 void sliding::on_win()
 {
-	//do nothing for now
+	//soloud.play(voice3);
 	player_speed_m = 1.25;
 }
 
@@ -117,7 +122,8 @@ void sliding::init()
 	inited = true;
 
 	std::sort(blocks.begin(), blocks.end());
-	for (int i = 0; i < 10000U; ++i)
+	//set it to 10000
+	for (int i = 0; i < 0U; ++i)
 	{
 		switch (rand() % 4)
 		{
