@@ -110,12 +110,22 @@ void teleport_camera(glm::vec3 position, float yaw_, bool lock)
 	cameraFront = glm::normalize(front);
 }
 
-void start_credits()
+void okurwa()
 {
+	soloud.fadeGlobalVolume(0, 3.0);
+	std::this_thread::sleep_for(std::chrono::seconds(3));
 	soloud.stopAll();
+	soloud.setGlobalVolume(1.0);
 	soloud.play(bg_music_credits);
 	credit_progress = 0.0;
+}
+
+void start_credits()
+{
 	teleport_camera(glm::vec3{ 400,301,-49 }, -90, true);
+
+	std::thread t(okurwa);
+	t.detach();
 }
 
 uint8_t advtext = 0;
@@ -1151,6 +1161,28 @@ int main()
 				auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965+6+1,y,-998 - z}, &lab_black, 1 });
 		}
 
+	for (int x = 0; x < 18; ++x)
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 5; ++y)
+		{
+			auto zz1 = (z == 0 || z == 4);
+			auto zz2 = (y == 0 || y == 4);
+			if (zz1 ^ zz2)
+			{
+				auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 2 + x,y,-998 - z}, &lab_tile, 1 });
+				if (y == 0 && z == 2)
+					cubic2.texture = &lab_yellow;
+			}
+		}
+
+	for (int z = 0; z < 5; ++z)
+		for (int y = 0; y < 5; ++y)
+		{
+			auto zz1 = (z == 0 || z == 4);
+			auto zz2 = (y == 0 || y == 4);
+			if (zz1 ^ zz2)
+				auto& cubic2 = cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 2 + 18,y,-998 - z}, &lab_black, 1 });
+		}
 
 	cubes.emplace_back(Cube{ glm::vec3{-965+6+1,4,-998 - 0}, &lab_black, 1 });
 	cubes.emplace_back(Cube{ glm::vec3{-965+6+1,4,-998 - 4}, &lab_black, 1 });
@@ -1162,6 +1194,34 @@ int main()
 	cubes.emplace_back(Cube{ glm::vec3{-965 + 6 + 1,2,-998 - 3}, &lab_black, false });
 
 	auto yacie_blockade_lab_end = cubes.size();
+
+	constexpr std::string_view labmapa =
+		"ZZZ/............"
+		"ZZZ/............"
+		"ZZZ/..#########."
+		"ZZZ/.#ZZZZZZZZZ#"
+		"ZZZ/.#ZZZZZZZZZ#"
+		"ZZZ/.#ZZZZZZZZZ#"
+		"ZZZ/.#ZZZ/#####."
+		"ZZZ/.#ZZZ/......"
+		"ZZZ/##ZZZ/......"
+		"ZZZZZZZZZ/......"
+		"ZZZZZZZZZ/......"
+		"ZZZZZZZZZ/......"
+		"######ZZZ/......"
+		".....#ZZZ/......"
+		".....#ZZZ/......"
+		".....#ZZZ/......"
+		".....#ZZZ/......"
+		".....#ZZZ/......";
+
+	for (int z = 0; z < 16;++z)
+		for (int x = 0; x < 18; ++x)
+		for (int y = 0; y < 3; ++y)
+		{
+			if (labmapa.at(x*16+z) == '#')
+				cubes.emplace_back(Cube{ glm::vec3{-985 + x + 2,y+1,-998 - z + 5}, &lab_tile, true });
+		}
 
 	auto normal_size = cubes.size();
 
@@ -1444,28 +1504,48 @@ int main()
 		static bool transition2 = false;
 		static bool was_sskip_pressed = false;
 		bool is_sskip_pressed = glfwGetKey(window, GLFW_KEY_F9) == GLFW_PRESS;
-		if (player.pos.y < -50 || (is_sskip_pressed && !was_sskip_pressed))
+		static bool won_ss = false;
+		static bool trans3last = false;
+		if (player.pos.y < -50 || (is_sskip_pressed && !was_sskip_pressed && glfwGetMouseButton(window,2) == GLFW_PRESS))
 		{
 			if (transition)
 			{
-				if (transition2) abort();
-				transition2 = true;
+				if (transition2)
+				{
+					
+					if (trans3last)
+						abort();
+					trans3last = true;
+					if (won_ss)
+					{
+						ourShader.use();
+						ourShader.setVec3("afog_color", { 0,0,0 });
+						start_credits();
+						fade::fade({ 1,1,1 }, 3.0);
+					}
+					else abort();
+				}
+				else
+				{
+					transition2 = true;
 
-				ourShader.use();
-				ourShader.setVec3("afog_color", glm::vec3{ 0.0,0.4,0.8 });
-				teleport_camera(glm::vec3{ 8-1000,1,7 - 1000.0 }, -90, false);
-				fade::fade({ 1,0,1 }, 3);
-				soloud.stopAll();
-				soloud.play(bg_music3);
-				player_save.reset();
+					ourShader.use();
+					ourShader.setVec3("afog_color", glm::vec3{ 0.0,0.4,0.8 });
+					teleport_camera(glm::vec3{ 8 - 1000,1,7 - 1000.0 }, -90, false);
+					fade::fade({ 1,0,1 }, 3);
+					soloud.stopAll();
+					soloud.play(bg_music3);
+					player_save.reset();
 
-				player_speed_m = 1.25;
+					player_speed_m = 1.25;
 
-				//sliding::init();
-				//sliding::enable();
+					//sliding::init();
+					//sliding::enable();
 
-				std::thread t(play_voices);
-				t.detach();
+					std::thread t(play_voices);
+					t.detach();
+				}
+
 			}
 			else
 			{
@@ -1489,6 +1569,7 @@ int main()
 		static bool blockade_moved = false;
 		if (!blockade_moved && player.pos.z < -991)
 		{
+			player_save.reset();
 			blockade_moved = true;
 			for (auto i = fake_blockade_index; i < mineblocker_index; ++i)
 			{
@@ -1507,8 +1588,8 @@ int main()
 		}
 		static bool inited_ss = false;
 		static bool started_ss = false;
-		static bool won_ss = false;
-		if (!inited_ss && player.pos.x > -968.0 + 2.0 && player.pos.z < -900.0 && player.pos.x < -800.0f)
+		
+		if (!inited_ss && player.pos.x > -968.0 + 2.0 - 10.0 && player.pos.z < -900.0 && player.pos.x < -800.0f)
 		{
 			inited_ss = true;
 			sliding::init();
@@ -1581,7 +1662,7 @@ int main()
 		//glBindVertexArray(VAO);
 
 		//glBindBuffer(GL_ARRAY_BUFFER, VBO);
-		if (credit_progress.has_value())
+		if (trans3last)
 		{
 			glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 		}
@@ -1640,10 +1721,13 @@ int main()
 		ourShader.setMat4("model", model);
 		for (auto& [txt, offset] : c_offsets)
 		{
-			if ((transition ^ transition2) ^ (txt == &texture3))
-				continue;
-			if (transition2 ^ (txt == &lab_black || txt == &lab_yellow || txt == &lab_tile_v || txt == &lab_tile))
-				continue;
+			if (!trans3last)
+			{
+				if ((transition ^ transition2) ^ (txt == &texture3))
+					continue;
+				if (transition2 ^ (txt == &lab_black || txt == &lab_yellow || txt == &lab_tile_v || txt == &lab_tile))
+					continue;
+			}
 
 			txt->use();
 			

@@ -123,7 +123,7 @@ void sliding::init()
 
 	std::sort(blocks.begin(), blocks.end());
 	//set it to 10000
-	for (int i = 0; i < 0U; ++i)
+	for (int i = 0; i < 10000U; ++i)
 	{
 		switch (rand() % 4)
 		{
